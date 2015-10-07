@@ -14,7 +14,7 @@ int initialValue = 25;
 int currentValue = 0;
 unsigned long previousTime = 0;
 unsigned long startedSignaling = 0;
-int oneMinute = 60000;
+unsigned long oneMinute = 60000;
 int switchPin = 9;
 int beeperPin = 10;
 
@@ -63,7 +63,9 @@ void loop()
 {
     if (clockState == POMODORO_STATE) {
         unsigned long currentTime = millis();
-        if (currentTime - previousTime > oneMinute) {
+		unsigned long diffValue = currentTime - previousTime;
+		Serial.println(diffValue);
+        if (diffValue > oneMinute) {
             previousTime = currentTime;
             --currentValue;
         }
