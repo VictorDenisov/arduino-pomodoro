@@ -7,8 +7,8 @@
 
 int clockState = 0;
 
-int switchState = 0;
-int prevSwitchState = 0;
+int switchState = 1;
+int prevSwitchState = 1;
 
 int initialValue = 25;
 int currentValue = 0;
@@ -19,61 +19,64 @@ int switchPin = 9;
 int beeperPin = 10;
 
 void playSound() {
-	tone(beeperPin, 262, 200);
+    tone(beeperPin, 262, 200);
 }
 
 void makeFree() {
-    digitalWrite(2, LOW);
-    digitalWrite(3, HIGH);
+    digitalWrite(5, HIGH);
+    digitalWrite(6, LOW);
+    currentValue = 0;
+    setupLights();
 }
 
 void makeBusy() {
-    digitalWrite(2, HIGH);
-    digitalWrite(3, LOW);
+    digitalWrite(5, LOW);
+    digitalWrite(6, HIGH);
 }
 
 void setupLights() {
     for (int i = 0; i < 5; ++i) {
         if (((1 << i) & currentValue) != 0) {
-            digitalWrite(8 - i, HIGH);
+            digitalWrite(i, HIGH);
         } else {
-            digitalWrite(8 - i, LOW);
+            digitalWrite(i, LOW);
         }
     }
 }
 
 void setup()
 {
+    pinMode(0, OUTPUT);
+    pinMode(1, OUTPUT);
     pinMode(2, OUTPUT);
     pinMode(3, OUTPUT);
     pinMode(4, OUTPUT);
+
     pinMode(5, OUTPUT);
     pinMode(6, OUTPUT);
-    pinMode(7, OUTPUT);
-    pinMode(8, OUTPUT);
+
     pinMode(9, INPUT);
+    digitalWrite(9, HIGH);
     currentValue = 0;
     setupLights();
     clockState = INITIAL_STATE;
     makeFree();
-    Serial.begin(9600);
 }
 
 void loop()
 {
     if (clockState == POMODORO_STATE) {
         unsigned long currentTime = millis();
-		unsigned long diffValue = currentTime - previousTime;
-		Serial.println(diffValue);
+        unsigned long diffValue = currentTime - previousTime;
         if (diffValue > oneMinute) {
             previousTime = currentTime;
             --currentValue;
         }
         setupLights();
         if (currentValue == 0) {
-			playSound();
+            playSound();
             clockState = SIGNALING_STATE;
-			startedSignaling = millis();
+            startedSignaling = millis();
             makeFree();
         }
     }
@@ -82,21 +85,19 @@ void loop()
         if (currentTime - previousTime > 300) {
             previousTime = currentTime;
             currentValue = 31 - currentValue;
-			playSound();
+            playSound();
         }
         setupLights();
-		if (currentTime - startedSignaling > 10000) {
-			clockState = INITIAL_STATE;
-			currentValue = 0;
-			setupLights();
-		}
+        if (currentTime - startedSignaling > 10000) {
+            clockState = INITIAL_STATE;
+            currentValue = 0;
+            setupLights();
+        }
     }
 
     switchState = digitalRead(switchPin);
-    //Serial.println(switchState);
 
-    if (switchState != prevSwitchState && switchState == 0) {
-        Serial.println("Entered switch change");
+    if (switchState != prevSwitchState && switchState == 1) {
         if (clockState == INITIAL_STATE) {
             previousTime = millis();
             clockState = POMODORO_STATE;
